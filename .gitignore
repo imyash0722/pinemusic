@@ -3,7 +3,6 @@ __pycache__/
 *$py.class
 .venv/
 node_modules/
-dist/
 *.log
 *.sqlite3
 *.db
