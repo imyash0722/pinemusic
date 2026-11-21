@@ -1,0 +1,29 @@
+[Unit]
+Description=PineMusic - Lossless Music Requester & Ingest Daemon
+After=network.target navidrome.service tinapple-proton-proxy.service
+Wants=tinapple-proton-proxy.service
+
+[Service]
+Type=simple
+User=pineapple
+Group=media
+WorkingDirectory=/opt/pinemusic/backend
+Environment="PATH=/home/pineapple/.local/share/pinemusic/venv/bin:/usr/local/bin:/usr/bin"
+Environment="PYTHONPATH=/opt/pinemusic/backend"
+Environment="PINEMUSIC_PORT=8090"
+Environment="PINEMUSIC_DIR=/srv/media/music"
+Environment="PINEMUSIC_PLAYLIST_DIR=/srv/media/music/Playlists"
+Environment="NAVIDROME_URL=http://127.0.0.1:4533"
+Environment="NAVIDROME_USER=pineapple"
+Environment="NAVIDROME_PASS=pine@2507"
+Environment="PROTON_PROXY=http://127.0.0.1:1088"
+Environment="HTTP_PROXY=http://127.0.0.1:1088"
+Environment="HTTPS_PROXY=http://127.0.0.1:1088"
+Environment="NO_PROXY=localhost,127.0.0.1,::1,100.64.0.0/10,192.168.0.0/16"
+ExecStart=/home/pineapple/.local/share/pinemusic/venv/bin/python3 run.py
+Restart=always
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
