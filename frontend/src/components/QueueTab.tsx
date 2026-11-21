@@ -39,12 +39,12 @@ export const QueueTab: React.FC<QueueTabProps> = ({
             {activeItems.map((item) => (
               <div
                 key={item.id}
-                className="glass-panel p-4 rounded-2xl border border-emerald-500/30 bg-obsidian-900/80 shadow-xl"
+                className="glass-panel p-4 rounded-2xl border border-pine-500/30 bg-obsidian-900 shadow-sm"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="min-w-0">
                     <div className="flex items-center space-x-2">
-                      <span className="text-[10px] font-mono uppercase px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">
+                      <span className="text-[10px] font-mono uppercase px-1.5 py-0.2 rounded bg-pine-600/20 text-emerald-300 border border-pine-500/30 font-semibold">
                         {item.target_quality}
                       </span>
                       <h4 className="text-sm font-bold text-white truncate">{item.title}</h4>
@@ -64,7 +64,7 @@ export const QueueTab: React.FC<QueueTabProps> = ({
                 {/* Progress Bar */}
                 <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden mb-2">
                   <div
-                    className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 transition-all duration-300"
+                    className="h-full bg-pine-500 transition-all duration-300"
                     style={{ width: `${Math.max(5, item.progress_percent)}%` }}
                   />
                 </div>

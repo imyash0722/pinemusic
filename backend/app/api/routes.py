@@ -12,7 +12,7 @@ from app.auth import create_jwt, verify_jwt, verify_navidrome_auth
 from app.resolvers.aggregator import MusicAggregator
 from app.resolvers.base import TrackItem, PlaylistOrAlbum, SearchResponse
 from app.queue_manager import queue_manager
-from app.library import trigger_navidrome_scan, delete_track_from_device
+from app.library import trigger_navidrome_scan, delete_track_from_device, scan_vault_tracks
 
 router = APIRouter(prefix="/api/v1")
 aggregator = MusicAggregator()
@@ -182,13 +182,29 @@ async def retry_queue_item(item_id: str, req: QueueRetryRequest):
 
 # --- Library & Device Management ---
 @router.get("/library/items")
-async def list_library_items(limit: int = 150):
+async def list_library_items(limit: int = 300):
     db_path = await get_db_path()
-    async with aiosqlite.connect(db_path) as db:
-        db.row_factory = aiosqlite.Row
-        cur = await db.execute("SELECT * FROM library_items ORDER BY downloaded_at DESC LIMIT ?", (limit,))
-        rows = await cur.fetchall()
-        return [dict(r) for r in rows]
+    db_items = []
+    try:
+        async with aiosqlite.connect(db_path) as db:
+            db.row_factory = aiosqlite.Row
+            cur = await db.execute("SELECT * FROM library_items ORDER BY downloaded_at DESC LIMIT ?", (limit,))
+            rows = await cur.fetchall()
+            db_items = [dict(r) for r in rows]
+    except Exception:
+        db_items = []
+
+    # Also scan physical vault for all existing media files
+    vault_items = scan_vault_tracks(limit=limit)
+    seen_paths = set(item.get("file_path") for item in db_items if item.get("file_path"))
+    merged = list(db_items)
+    for v in vault_items:
+        if v["file_path"] not in seen_paths:
+            merged.append(v)
+            seen_paths.add(v["file_path"])
+
+    merged.sort(key=lambda x: str(x.get("downloaded_at", "")), reverse=True)
+    return merged[:limit]
 
 @router.delete("/library/delete")
 async def delete_library_track(req: DeleteFileRequest):

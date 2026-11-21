@@ -243,3 +243,55 @@ def delete_track_from_device(file_path: str) -> bool:
     except Exception as e:
         print(f"[Library] Error deleting file {file_path}: {e}")
         return False
+
+def scan_vault_tracks(limit: int = 500) -> List[Dict[str, Any]]:
+    import time
+    cfg = get_config()
+    music_dir = cfg["music_dir"]
+    items = []
+    if not os.path.exists(music_dir):
+        return items
+
+    audio_exts = {".flac", ".mp3", ".m4a", ".opus", ".ogg", ".wav"}
+    for root, _, files in os.walk(music_dir):
+        for f in files:
+            ext = os.path.splitext(f)[1].lower()
+            if ext in audio_exts:
+                abs_p = os.path.join(root, f)
+                try:
+                    stat = os.stat(abs_p)
+                    raw_base = os.path.splitext(f)[0]
+                    album = os.path.basename(root)
+                    artist = "Unknown Artist"
+                    title = raw_base
+                    parts = raw_base.split(" - ")
+                    if len(parts) >= 3:
+                        artist = parts[1].strip()
+                        title = " - ".join(parts[2:]).strip()
+                    elif len(parts) == 2:
+                        if parts[0].strip().isdigit():
+                            title = parts[1].strip()
+                        else:
+                            artist = parts[0].strip()
+                            title = parts[1].strip()
+
+                    quality = "FLAC-24" if ext == ".flac" else ("MP3-320" if ext == ".mp3" else ext.replace(".", "").upper())
+                    items.append({
+                        "id": f"vault_{abs(hash(abs_p))}",
+                        "title": title,
+                        "artist": artist,
+                        "album": album,
+                        "duration": 0,
+                        "quality": quality,
+                        "file_path": abs_p,
+                        "playlist_name": album if "Playlists" in root else None,
+                        "downloaded_at": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(stat.st_mtime))
+                    })
+                except Exception:
+                    pass
+                if len(items) >= limit:
+                    break
+        if len(items) >= limit:
+            break
+    items.sort(key=lambda x: x["downloaded_at"], reverse=True)
+    return items

@@ -59,7 +59,9 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ systemStatus }) => {
             </div>
             <div className="flex justify-between p-2 rounded-lg bg-obsidian-950 border border-white/5">
               <span className="text-slate-500">Available Space:</span>
-              <span className="text-cyan-400 font-semibold">{systemStatus?.storage?.free_gb ?? 0} GB Free</span>
+              <span className={systemStatus ? "text-cyan-400 font-semibold" : "text-slate-400 font-medium"}>
+                {systemStatus ? `${systemStatus.storage.free_gb} GB Free` : 'Checking vault storage...'}
+              </span>
             </div>
           </div>
         </div>
@@ -97,7 +99,9 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ systemStatus }) => {
           <div className="space-y-2 text-xs font-mono">
             <div className="flex justify-between p-2 rounded-lg bg-obsidian-950 border border-white/5">
               <span className="text-slate-500">Active Queue:</span>
-              <span className="text-purple-400 font-semibold">{systemStatus?.queue?.active ?? 0} active / {systemStatus?.queue?.pending ?? 0} pending</span>
+              <span className="text-purple-400 font-semibold">
+                {systemStatus ? `${systemStatus.queue.active} active / ${systemStatus.queue.pending} pending` : 'Checking queue...'}
+              </span>
             </div>
             <div className="flex justify-between p-2 rounded-lg bg-obsidian-950 border border-white/5">
               <span className="text-slate-500">Service Port:</span>

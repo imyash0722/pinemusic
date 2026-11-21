@@ -38,9 +38,9 @@ export const LibraryTab: React.FC<LibraryTabProps> = ({ library, onRefresh }) =>
     setIsRescanning(true);
     try {
       await api.triggerRescan();
-      alert('Navidrome library rescan triggered!');
+      onRefresh();
     } catch (e) {
-      alert('Failed to trigger scan');
+      console.error('Failed to trigger scan:', e);
     } finally {
       setIsRescanning(false);
     }

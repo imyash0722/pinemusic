@@ -209,15 +209,21 @@ export const IngestModal: React.FC<IngestModalProps> = ({
               className="flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-medium bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 transition-colors disabled:opacity-40"
             >
               <Layers className="w-3.5 h-3.5 text-amber-400" />
-              <span>Request Only (Ombi)</span>
+              <span>Request Only</span>
             </button>
             <button
               onClick={() => handleSubmit(false)}
               disabled={selectedIds.size === 0 || isSubmitting}
-              className="flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 shadow-lg shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-40"
+              className="flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-pine-600 hover:bg-pine-500 text-white border border-pine-500/30 shadow-sm transition-all active:scale-95 disabled:opacity-40"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>{isSubmitting ? 'Queueing...' : `Download ${selectedIds.size} Tracks`}</span>
+              <span>
+                {isSubmitting
+                  ? 'Queueing...'
+                  : selectedIds.size === 1
+                  ? 'Download Track'
+                  : `Download ${selectedIds.size} Tracks`}
+              </span>
             </button>
           </div>
         </div>

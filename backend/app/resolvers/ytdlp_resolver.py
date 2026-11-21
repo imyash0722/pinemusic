@@ -64,7 +64,44 @@ class YtDlpResolver:
                 info = ydl.extract_info(url, download=False)
                 if not info:
                     return None
-                entries = info.get("entries", [])
+                entries = info.get("entries")
+                if entries is None:
+                    # Single video
+                    vid_id = info.get("id")
+                    raw_title = str(info.get("title") or "YouTube Track").strip()
+                    uploader = str(info.get("uploader") or info.get("channel") or "Unknown Artist").strip()
+                    artist = uploader
+                    t_title = raw_title
+                    if " - " in raw_title:
+                        parts = raw_title.split(" - ", 1)
+                        artist = parts[0].strip()
+                        t_title = parts[1].strip()
+                    t_title = re.sub(r'\[.*?\]|\(.*?\)', '', t_title).strip()
+                    cover = info.get("thumbnail") or f"https://i.ytimg.com/vi/{vid_id}/hqdefault.jpg"
+                    single = TrackItem(
+                        id=f"yt_{vid_id}",
+                        title=t_title,
+                        artist=artist,
+                        album="YouTube Singles",
+                        duration=int(info.get("duration", 0) or 0),
+                        cover_url=cover,
+                        platform="youtube",
+                        quality="flac-16",
+                        source_url=info.get("webpage_url") or f"https://www.youtube.com/watch?v={vid_id}",
+                        track_number=1
+                    )
+                    return PlaylistOrAlbum(
+                        id=f"yt_trk_{vid_id}",
+                        title=t_title,
+                        artist=artist,
+                        type="track",
+                        cover_url=cover,
+                        track_count=1,
+                        source_url=single.source_url,
+                        platform="youtube",
+                        tracks=[single]
+                    )
+
                 title = info.get("title", "YouTube Playlist")
                 uploader = info.get("uploader", "Various Artists")
                 tracks: List[TrackItem] = []

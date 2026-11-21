@@ -53,32 +53,20 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
     }
   };
 
-  const handleQuickPreset = (query: string) => {
-    setSearchQuery(query);
-    setIsSearching(true);
-    api.searchMusic(query, 'auto')
-      .then(setSearchResults)
-      .catch((err) => setError(err.message))
-      .finally(() => setIsSearching(false));
-  };
-
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Hero Ingest Box */}
-      <div className="relative rounded-3xl p-6 sm:p-8 bg-gradient-to-b from-white/[0.04] to-transparent border border-white/10 shadow-2xl overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-
+      <div className="relative rounded-3xl p-6 sm:p-8 bg-obsidian-900 border border-white/10 shadow-lg overflow-hidden">
         <div className="relative z-10 max-w-3xl">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-pine-600/15 border border-pine-500/25 text-pine-300 text-xs font-medium mb-3">
+            <Sparkles className="w-3.5 h-3.5 text-pine-400" />
             <span>Universal Bitstream Ingest Engine</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
             Search or Paste Any Music Link
           </h2>
           <p className="text-sm text-slate-400 mt-1">
-            Zero sign-in required. Decodes Spotify, YouTube, Apple, Deezer, and SoundCloud directly into your Navidrome FLAC library.
+            Zero sign-in required. Decodes Spotify, Apple Music, YouTube, and Deezer playlists, albums, and tracks directly into Navidrome.
           </p>
 
           {/* URL Ingest Form */}
@@ -89,32 +77,18 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
                 type="text"
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
-                placeholder="Paste Spotify, YouTube, or Deezer playlist / track URL..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-obsidian-950/80 border border-white/15 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors font-mono"
+                placeholder="Paste Spotify, Apple Music, YouTube, or Deezer playlist, album, or track URL..."
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-obsidian-950 border border-white/10 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-pine-500 transition-colors font-mono"
               />
             </div>
             <button
               type="submit"
               disabled={isResolving || !urlInput.trim()}
-              className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-obsidian-950 shadow-lg shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-40 shrink-0"
+              className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-pine-600 hover:bg-pine-500 text-white border border-pine-500/30 shadow-sm transition-all active:scale-95 disabled:opacity-40 shrink-0"
             >
               {isResolving ? 'Resolving Bitstream...' : 'Inspect & Ingest'}
             </button>
           </form>
-
-          {/* Quick Presets */}
-          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
-            <span className="text-slate-500 font-medium">Try Presets:</span>
-            {['TheFatRat', 'Alan Walker', 'Kavinsky', 'synthwave flac'].map((preset) => (
-              <button
-                key={preset}
-                onClick={() => handleQuickPreset(preset)}
-                className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 transition-colors font-medium"
-              >
-                {preset}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -128,7 +102,7 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search artist, song, or album..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-obsidian-900 border border-white/10 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full pl-10 pr-4 py-2 rounded-xl bg-obsidian-900 border border-white/10 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-pine-500 transition-colors"
             />
           </form>
 
@@ -144,7 +118,7 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
                 onClick={() => setPlatform(p.id)}
                 className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
                   platform === p.id
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    ? 'bg-pine-600/20 text-emerald-300 border border-pine-500/30'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -164,7 +138,7 @@ export const DiscoverTab: React.FC<DiscoverTabProps> = ({
       {/* Results Grid */}
       {isSearching ? (
         <div className="py-16 text-center">
-          <div className="inline-block w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          <div className="inline-block w-8 h-8 border-2 border-pine-500 border-t-transparent rounded-full animate-spin" />
           <p className="mt-3 text-sm text-slate-400">Querying lossless providers...</p>
         </div>
       ) : searchResults && searchResults.tracks.length > 0 ? (

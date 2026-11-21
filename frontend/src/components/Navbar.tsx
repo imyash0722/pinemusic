@@ -1,6 +1,7 @@
 import React from 'react';
 import { Disc3, ListMusic, Layers, Settings2, Sparkles, HardDrive, Radio, ExternalLink } from 'lucide-react';
 import { SystemStatus } from '../types';
+import { PineappleGuitarLogo } from './PineappleGuitarLogo';
 
 interface NavbarProps {
   activeTab: 'discover' | 'queue' | 'requests' | 'library' | 'settings';
@@ -20,17 +21,15 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand */}
         <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('discover')}>
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-pine-600 via-emerald-500 to-electric-cyan flex items-center justify-center shadow-lg shadow-pine-500/20">
-            <svg className="w-5 h-5 text-obsidian-950" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-            </svg>
+          <div className="w-10 h-10 rounded-xl bg-obsidian-900 border border-white/10 flex items-center justify-center p-1.5 shadow-sm hover:border-pine-500/40 transition-colors">
+            <PineappleGuitarLogo size={32} />
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
+              <span className="text-xl font-bold tracking-tight text-white">
                 PineMusic
               </span>
-              <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-pine-500/10 text-pine-400 border border-pine-500/20 font-semibold">
+              <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-pine-500/15 text-pine-400 border border-pine-500/20 font-semibold tracking-wide">
                 Navidrome
               </span>
             </div>
