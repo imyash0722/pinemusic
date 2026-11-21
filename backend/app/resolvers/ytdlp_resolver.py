@@ -133,6 +133,11 @@ class YtDlpResolver:
                 "progress_hooks": [hook],
                 "quiet": True,
                 "no_warnings": True,
+                "extractor_args": {
+                    "youtube": {
+                        "player_client": ["android", "ios", "web"]
+                    }
+                },
             }
         else: # Audio extraction
             audio_fmt = "flac" if "flac" in quality else "mp3"
@@ -142,6 +147,11 @@ class YtDlpResolver:
                 "progress_hooks": [hook],
                 "quiet": True,
                 "no_warnings": True,
+                "extractor_args": {
+                    "youtube": {
+                        "player_client": ["android", "ios", "web"]
+                    }
+                },
                 "postprocessors": [{
                     "key": "FFmpegExtractAudio",
                     "preferredcodec": audio_fmt,
