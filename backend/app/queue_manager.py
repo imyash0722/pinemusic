@@ -189,16 +189,20 @@ class QueueManager:
                 tmp_out = os.path.join(download_tmp, f"dl_{item_id}")
 
                 # Progress callback
+                loop = asyncio.get_running_loop()
                 last_emit = 0
                 def progress_cb(pct, speed, eta):
                     nonlocal last_emit
                     now = time.time()
                     if now - last_emit > 0.4:
                         last_emit = now
-                        asyncio.run_coroutine_threadsafe(
-                            self._update_item_progress(item_id, pct, speed, eta),
-                            asyncio.get_event_loop()
-                        )
+                        try:
+                            asyncio.run_coroutine_threadsafe(
+                                self._update_item_progress(item_id, pct, speed, eta),
+                                loop
+                            )
+                        except Exception:
+                            pass
 
                 # Route download based on platform
                 downloaded_file = None
