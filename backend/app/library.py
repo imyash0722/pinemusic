@@ -167,17 +167,32 @@ def write_m3u8(playlist_name: str, file_paths: List[str]) -> str:
     os.makedirs(pl_dir, exist_ok=True)
     m3u8_file = os.path.join(pl_dir, f"{sanitize_filename(playlist_name)}.m3u8")
 
-    lines = ["#EXTM3U", f"#EXTENC: UTF-8", f"#PLAYLIST: {playlist_name}"]
+    existing_paths = set()
+    lines = []
+    if os.path.exists(m3u8_file):
+        with open(m3u8_file, "r", encoding="utf-8") as f:
+            for l in f:
+                stripped = l.strip()
+                if stripped and not stripped.startswith("#"):
+                    existing_paths.add(stripped)
+                    abs_p = os.path.normpath(os.path.join(pl_dir, stripped))
+                    existing_paths.add(abs_p)
+                lines.append(stripped)
+    else:
+        lines = ["#EXTM3U", f"#EXTENC: UTF-8", f"#PLAYLIST: {playlist_name}"]
+
     for p in file_paths:
-        if os.path.exists(p):
-            # Write relative path from playlist_dir or absolute path
+        if os.path.exists(p) and p not in existing_paths:
             try:
                 rel = os.path.relpath(p, pl_dir)
                 lines.append(f"#EXTINF:-1,{os.path.basename(p)}")
                 lines.append(rel)
+                existing_paths.add(p)
+                existing_paths.add(rel)
             except Exception:
                 lines.append(f"#EXTINF:-1,{os.path.basename(p)}")
                 lines.append(p)
+                existing_paths.add(p)
 
     with open(m3u8_file, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")

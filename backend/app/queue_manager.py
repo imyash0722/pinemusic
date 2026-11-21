@@ -240,6 +240,13 @@ class QueueManager:
                     }
                     final_path = organize_file(downloaded_file, meta, playlist_name=item["playlist_name"])
 
+                    # Update M3U8 playlist if associated with a playlist
+                    if item.get("playlist_name"):
+                        try:
+                            write_m3u8(item["playlist_name"], [final_path])
+                        except Exception as m3u_err:
+                            print(f"[Queue] Warning writing playlist m3u8: {m3u_err}")
+
                     # Update SQLite database
                     async with aiosqlite.connect(db_path) as db:
                         await db.execute("""
