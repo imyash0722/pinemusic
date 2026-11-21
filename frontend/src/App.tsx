@@ -4,14 +4,13 @@ import { DiscoverTab } from './components/DiscoverTab';
 import { QueueTab } from './components/QueueTab';
 import { RequestsTab } from './components/RequestsTab';
 import { LibraryTab } from './components/LibraryTab';
-import { SettingsTab } from './components/SettingsTab';
 import { PreviewPlayer } from './components/PreviewPlayer';
 import { IngestModal } from './components/IngestModal';
 import { TrackItem, PlaylistOrAlbum, QueueItem, RequestItem, LibraryItem, SystemStatus } from './types';
 import { api } from './services/api';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'discover' | 'queue' | 'requests' | 'library' | 'settings'>('discover');
+  const [activeTab, setActiveTab] = useState<'discover' | 'queue' | 'requests' | 'library'>('discover');
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [requests, setRequests] = useState<RequestItem[]>([]);
@@ -217,8 +216,6 @@ export const App: React.FC = () => {
         {activeTab === 'library' && (
           <LibraryTab library={library} onRefresh={refreshAll} />
         )}
-
-        {activeTab === 'settings' && <SettingsTab systemStatus={systemStatus} />}
       </main>
 
       {/* Floating 30s Audio Preview Player */}

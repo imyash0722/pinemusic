@@ -2,108 +2,181 @@
 
 ```
 +-----------------------------------------------------------------------------------------+
-|                                    PINEMUSIC SERVER                                     |
+|                                    PINEMUSIC APPLIANCE                                  |
++-----------------------------------------------------------------------------------------+
 |                                                                                         |
-|   +-----------------------+     +------------------------+     +--------------------+   |
-|   |  Multi-Source Ingest  | --> |     Queue Orchestrator | --> | Mutagen Tagger &   |   |
-|   |  (Spotify/YT/Deezer)  |     |   (SQLite + WebSockets)|     | FLAC Vorbis Engine |   |
-|   +-----------------------+     +------------------------+     +--------------------+   |
-|                                                                          |              |
-|                                                                          v              |
-|                                                                +--------------------+   |
-|                                                                | /srv/media/music   |   |
-|                                                                | & .m3u8 Playlists  |   |
-|                                                                +--------------------+   |
-|                                                                          |              |
-|                                                                          v              |
-|                                                                +--------------------+   |
-|                                                                | Navidrome Scanner  |   |
-|                                                                | (/rest/startScan)  |   |
-|                                                                +--------------------+   |
+|  [ Web Client / Mobile UI ]                                                            |
+|          │                                                                              |
+|          ▼ (Port :8090 / Reverse Proxy: /pinemusic/*)                                   |
+|   ┌─────────────────────────────────────────────────────────────────────────────────┐   |
+|   │ FastAPI Core Daemon                                                             │   |
+|   │ ├─ Zero-Auth Resolvers: Spotify, Apple Music, Deezer Hi-Fi, YouTube/YT-DLP      │   |
+|   │ ├─ Queue Manager: Async SQLite (`aiosqlite`) + Real-time WebSockets             │   |
+|   │ ├─ Bitstream Engine: Multi-threaded FLAC-24/16 & MP3-320 Downloader             │   |
+|   │ └─ Mutagen Tagger: Embedded hi-res covers, Vorbis comments, ID3v2 tags          │   |
+|   └────────────────────────────────────────┬────────────────────────────────────────┘   |
+|                                            │                                            |
+|                                            ▼                                            |
+|   ┌─────────────────────────────────────────────────────────────────────────────────┐   |
+|   │ Local Storage Vault (/srv/media/music)                                          │   |
+|   │ ├─ Hierarchical Library: `<Artist>/<Album>/<Track> - <Title>.<ext>`             │   |
+|   │ └─ Accumulative Playlists: `/srv/media/music/Playlists/<Name>.m3u8`             │   |
+|   └────────────────────────────────────────┬────────────────────────────────────────┘   |
+|                                            │                                            |
+|                                            ▼                                            |
+|   ┌─────────────────────────────────────────────────────────────────────────────────┐   |
+|   │ Navidrome Music Server                                                          │   |
+|   │ └─ Automated Rescan Trigger via Subsonic API (`/rest/startScan.view`)           │   |
+|   └─────────────────────────────────────────────────────────────────────────────────┘   |
 +-----------------------------------------------------------------------------------------+
 ```
 
-PineMusic is a high-fidelity, zero-auth music requester, download queue orchestrator, and automated library manager for **Navidrome**. Inspired by the request tracking lifecycle of **Ombi** and the obsidian dark-glass audio experience of **Psysonic**.
-
----
-
-## Key Features
-
-- **Zero Sign-In / Zero Accounts Required**: No Spotify Premium, Apple Music, or Tidal credentials required. Resolves playlists and tracks via automated bitstream extraction and zero-auth APIs.
-- **Universal Multi-Platform Resolution**:
-  - Spotify playlists and albums (via Antra Lossless Engine)
-  - YouTube Music & YouTube Playlists / Videos (via YT-DLP)
-  - Deezer Hi-Fi 320k & FLAC (via Deezer API)
-  - Apple Music, SoundCloud, and Bandcamp links
-- **Audio Bitstream Selection**:
-  - 24-bit Studio Master FLAC
-  - 16-bit / 44.1kHz CD Quality FLAC
-  - 320 kbps High-Bitrate MP3
-  - 1080p MP4 Music Video
-- **Interactive Live Queue**:
-  - Real-time download progress, transfer speed, and ETA broadcasting via WebSockets.
-  - Interactive reordering (Move Up / Move Down).
-  - Cancel downloads and 1-click retry for failed items with alternate platform/quality fallback.
-- **Direct Navidrome Integration**:
-  - Automatically writes hierarchical files: `/srv/media/music/<Artist>/<Album>/<Track> - <Title>.<ext>`.
-  - Generates relative M3U8 playlists in `/srv/media/music/Playlists/`.
-  - Triggers Navidrome library scanner immediately upon completion (`/rest/startScan.view`).
-  - Single-click "Delete from Device" with confirmation that unlinks physical files and removes them from Navidrome.
-- **Floating 30s Waveform Preview Player**: Listen to high-fidelity audio snippets right in the web UI before queuing.
-
----
-
-## Architecture
-
-PineMusic runs as a standalone daemon on port `:8090`:
-- **Backend**: Python 3.12, FastAPI, Uvicorn, Async SQLite (`aiosqlite`), Mutagen, YT-DLP, WebSockets.
-- **Frontend**: React 18, Vite 5, TypeScript, Tailwind CSS, Lucide icons, Framer Motion.
-- **Database**: SQLite (`~/.local/share/pinemusic/pinemusic.db`).
-
 ```mermaid
-flowchart LR
-    A["Web Client (Port :8090)"] -->|"REST & WebSockets"| B["FastAPI Core Daemon"]
-    B --> C["Aggregator & Resolvers"]
-    C -->|"Zero-Auth Extract"| D["Antra / Deezer / YouTube"]
-    B --> E["SQLite Queue Manager"]
-    E --> F["Mutagen Tagging Engine"]
-    F --> G["/srv/media/music Storage"]
-    G --> H["Navidrome Subsonic Scanner"]
+flowchart TD
+    subgraph Clients["Clients"]
+        UI["PineMusic Web UI (Port :8090)"]
+    end
+
+    subgraph Backend["FastAPI Core Daemon"]
+        Aggregator["Universal Music Aggregator"]
+        Resolvers["Zero-Auth Resolvers (Spotify / Apple Music / Deezer / YouTube)"]
+        Queue["SQLite Queue Manager + WebSockets"]
+        Tagger["Mutagen FLAC/MP3 Metadata & Cover Engine"]
+    end
+
+    subgraph Storage["Storage & Navidrome"]
+        Vault["Physical Vault (/srv/media/music)"]
+        Playlists["Accumulative Playlists (.m3u8)"]
+        Navidrome["Navidrome Subsonic Scanner (:4533)"]
+    end
+
+    UI -->|"REST & Live WebSocket"| Backend
+    Aggregator --> Resolvers
+    Backend --> Queue
+    Queue --> Tagger
+    Tagger --> Vault
+    Tagger --> Playlists
+    Vault --> Navidrome
+    Playlists --> Navidrome
 ```
+
+PineMusic is a high-fidelity, zero-auth music requester, download queue orchestrator, and automated library manager for **Navidrome**. Designed for homelabs and personal cloud audio servers, PineMusic combines the request-tracking lifecycle of **Ombi** with an obsidian matte audio interface.
+
+---
+
+## Key Capabilities
+
+- **Zero-Auth Universal Bitstream Ingest**:
+  - **Spotify**: Resolves playlists, albums, and tracks via public embed extraction without requiring user accounts or Spotify Developer API keys.
+  - **Apple Music**: Resolves collections, albums, and song links via the official Apple iTunes Lookup API and metadata scraping.
+  - **Deezer Hi-Fi**: Direct track, album, and playlist resolution with full ISRC and catalog metadata.
+  - **YouTube Music / YouTube**: Automatic single-video and playlist resolution via YT-DLP with mobile player client extractor args to bypass bot challenge gates.
+- **Selectable Bitstream Fidelity**:
+  - `24-bit / 48kHz Studio Master FLAC` (Maximum fidelity)
+  - `16-bit / 44.1kHz Hi-Fi FLAC` (Lossless CD quality)
+  - `320 kbps High-Bitrate MP3` (Universal compatibility)
+  - `1080p Music Video MP4`
+- **Interactive Live Queue**:
+  - Real-time download progress, active bitrates, transfer speed, and ETA meters broadcasted via WebSockets (`/api/v1/queue/ws`).
+  - Interactive reordering (Move Up / Move Down).
+  - Cancel active downloads and 1-click retry for failed items with automated search fallback.
+- **Ombi-Style Request Tracking ("Request Only")**:
+  - Supports both immediate downloads ("Add to Active Queue") and deferred wishlists ("Request Only").
+  - Catalog albums and tracks in the **Requests** tab with status tracking (`PENDING` / `APPROVED`) to avoid bandwidth or storage bottlenecks.
+- **Physical Filesystem Vault Scanner & Device Management**:
+  - Deep-scans `/srv/media/music` to automatically surface pre-existing tracks in the **Device Library**.
+  - Single-click physical file deletion with confirmation that removes the file from disk and triggers a Navidrome scan.
+- **Deep Navidrome Integration**:
+  - Automatically compiles `.m3u8` playlists in `/srv/media/music/Playlists/`.
+  - Automatically triggers Navidrome's Subsonic library scan (`/rest/startScan.view`) upon queue completion.
+- **Floating 30-Second Audio Previews**:
+  - Built-in lightweight audio preview player for sampling tracks before enqueueing.
+
+---
+
+## Interface Overview
+
+The interface is organized into 4 focused tabs:
+1. **Discover**: Search by artist/album/track across all sources or paste public links (Spotify, Apple Music, Deezer, YouTube).
+2. **Queue**: Real-time progress, speed, ETA, and priority reordering for all active and pending downloads.
+3. **Requests**: Track requested albums, status, and request timestamps.
+4. **Device Library**: Browse physical music storage, inspect audio quality, and delete files with live storage telemetry.
+
+---
+
+## Architecture & Technology Stack
+
+- **Backend**: Python 3.12, FastAPI, Uvicorn, Async SQLite (`aiosqlite`), Mutagen, YT-DLP, Requests, WebSockets.
+- **Frontend**: React 18, Vite 5, TypeScript, Tailwind CSS, Lucide icons, Framer Motion.
+- **Systemd Service**: Runs under `pinemusic.service` bound to port `:8090`.
+- **Ingress**: Reverse-proxied via Caddy under `/pinemusic/*`.
+
+---
+
+## Configuration & Environment Variables
+
+PineMusic reads configuration from environment variables or sensible homelab defaults:
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `PINEMUSIC_PORT` | `8090` | Daemon HTTP port |
+| `PINEMUSIC_DIR` | `/srv/media/music` | Root storage directory for physical audio files |
+| `PINEMUSIC_PLAYLIST_DIR` | `/srv/media/music/Playlists` | Directory where `.m3u8` playlists are stored |
+| `NAVIDROME_URL` | `http://127.0.0.1:4533` | Navidrome Subsonic API endpoint |
+| `NAVIDROME_USER` | `pineapple` | Navidrome Subsonic username for rescan notifications |
+| `NAVIDROME_PASS` | `pine@2507` | Navidrome Subsonic password for rescan notifications |
+| `PINEMUSIC_DB` | `~/.local/share/pinemusic/pinemusic.db` | SQLite database path |
 
 ---
 
 ## Installation & Deployment
 
-### Run Standalone
+### Quick Setup
+
 ```bash
-# Set up virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
+# Clone the repository
+git clone https://github.com/imyash0722/pinemusic.git
+cd pinemusic
+
+# Set up Python virtual environment
+python3 -m venv venv
+source venv/bin/activate
 pip install -r backend/requirements.txt
 
-# Build frontend
+# Build the frontend
 cd frontend
 npm install
 npm run build
 cd ..
 
-# Start PineMusic daemon
+# Run the daemon
 python3 backend/run.py
 ```
 
-### Environment Configuration
-| Variable | Default | Purpose |
-| :--- | :--- | :--- |
-| `PINEMUSIC_PORT` | `8090` | Daemon HTTP port |
-| `PINEMUSIC_DIR` | `/srv/media/music` | Destination directory for music files |
-| `PINEMUSIC_PLAYLIST_DIR` | `/srv/media/music/Playlists` | Destination for `.m3u8` playlists |
-| `NAVIDROME_URL` | `http://127.0.0.1:4533` | Navidrome Subsonic endpoint |
-| `NAVIDROME_USER` | `pineapple` | Navidrome admin username |
-| `NAVIDROME_PASS` | `pine@2507` | Navidrome admin password |
-| `PROTON_PROXY` | `http://127.0.0.1:1088` | Optional HTTP/SOCKS5 proxy gateway |
+### Systemd Service Setup
+
+```ini
+[Unit]
+Description=PineMusic Appliance - High-Fidelity Music Requester & Ingest Daemon
+After=network.target navidrome.service
+
+[Service]
+Type=simple
+User=pineapple
+Group=media
+WorkingDirectory=/opt/pinemusic
+ExecStart=/opt/pinemusic/venv/bin/python3 backend/run.py
+Restart=always
+RestartSec=5
+Environment=PINEMUSIC_PORT=8090
+Environment=PINEMUSIC_DIR=/srv/media/music
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ---
 
 ## License
-MIT License. Created for the Tinapple Homelab Ecosystem.
+
+MIT License. Designed and maintained by Yashwanth Karthik (@imyash0722).

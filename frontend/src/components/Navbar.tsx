@@ -1,11 +1,11 @@
 import React from 'react';
-import { Disc3, ListMusic, Layers, Settings2, Sparkles, HardDrive, Radio, ExternalLink } from 'lucide-react';
+import { Disc3, ListMusic, Layers, Sparkles, HardDrive, Radio, ExternalLink } from 'lucide-react';
 import { SystemStatus } from '../types';
 import { PineappleGuitarLogo } from './PineappleGuitarLogo';
 
 interface NavbarProps {
-  activeTab: 'discover' | 'queue' | 'requests' | 'library' | 'settings';
-  setActiveTab: (tab: 'discover' | 'queue' | 'requests' | 'library' | 'settings') => void;
+  activeTab: 'discover' | 'queue' | 'requests' | 'library';
+  setActiveTab: (tab: 'discover' | 'queue' | 'requests' | 'library') => void;
   systemStatus: SystemStatus | null;
   wsConnected: boolean;
 }
@@ -90,18 +90,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Disc3 className="w-4 h-4" />
             <span>Device Library</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              activeTab === 'settings'
-                ? 'bg-pine-500/20 text-emerald-300 border border-pine-500/30 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.02]'
-            }`}
-          >
-            <Settings2 className="w-4 h-4" />
-            <span>Settings</span>
           </button>
         </nav>
 
