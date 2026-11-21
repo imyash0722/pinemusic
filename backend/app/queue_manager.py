@@ -221,14 +221,28 @@ class QueueManager:
                     # YT-DLP Universal Engine
                     query = f"{item['artist']} - {item['title']}"
                     target_url = url if ("youtube.com" in url or "youtu.be" in url) else f"ytsearch1:{query}"
-                    downloaded_file = await asyncio.to_thread(
-                        self.ytdlp.download_track,
-                        target_url,
-                        tmp_out,
-                        "video" if quality == "mp4-1080" else "audio",
-                        quality,
-                        progress_cb
-                    )
+                    try:
+                        downloaded_file = await asyncio.to_thread(
+                            self.ytdlp.download_track,
+                            target_url,
+                            tmp_out,
+                            "video" if quality == "mp4-1080" else "audio",
+                            quality,
+                            progress_cb
+                        )
+                    except Exception as dl_err:
+                        if target_url != f"ytsearch1:{query}":
+                            print(f"[Queue] Direct URL failed ({dl_err}), falling back to search: ytsearch1:{query}")
+                            downloaded_file = await asyncio.to_thread(
+                                self.ytdlp.download_track,
+                                f"ytsearch1:{query}",
+                                tmp_out,
+                                "video" if quality == "mp4-1080" else "audio",
+                                quality,
+                                progress_cb
+                            )
+                        else:
+                            raise
 
                 if downloaded_file and os.path.exists(downloaded_file):
                     # Tagging & Ingest
