@@ -1,6 +1,16 @@
 import { SearchResponse, PlaylistOrAlbum, QueueItem, RequestItem, LibraryItem, SystemStatus, TrackItem } from '../types';
 
-const API_BASE = '/api/v1';
+const getBasePrefix = (): string => {
+  if (typeof window !== 'undefined') {
+    const p = window.location.pathname;
+    if (p === '/pinemusic' || p.startsWith('/pinemusic/')) {
+      return '/pinemusic';
+    }
+  }
+  return '';
+};
+
+const getApiBase = (): string => `${getBasePrefix()}/api/v1`;
 
 export const getAuthToken = (): string | null => {
   return localStorage.getItem('pinemusic_token');
@@ -24,26 +34,26 @@ const getHeaders = () => {
 export const api = {
   // System Status
   async getSystemStatus(): Promise<SystemStatus> {
-    const res = await fetch(`${API_BASE}/system/status`, { headers: getHeaders() });
+    const res = await fetch(`${getApiBase()}/system/status`, { headers: getHeaders() });
     if (!res.ok) throw new Error('Failed to fetch system status');
     return res.json();
   },
 
   async triggerRescan(): Promise<{ status: string }> {
-    const res = await fetch(`${API_BASE}/system/rescan`, { method: 'POST', headers: getHeaders() });
+    const res = await fetch(`${getApiBase()}/system/rescan`, { method: 'POST', headers: getHeaders() });
     if (!res.ok) throw new Error('Failed to trigger scan');
     return res.json();
   },
 
   // Search & Resolve
   async searchMusic(query: string, platform: string = 'auto', limit: number = 25): Promise<SearchResponse> {
-    const res = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}&platform=${platform}&limit=${limit}`, { headers: getHeaders() });
+    const res = await fetch(`${getApiBase()}/search?q=${encodeURIComponent(query)}&platform=${platform}&limit=${limit}`, { headers: getHeaders() });
     if (!res.ok) throw new Error('Search failed');
     return res.json();
   },
 
   async resolveUrl(url: string): Promise<PlaylistOrAlbum> {
-    const res = await fetch(`${API_BASE}/resolve`, {
+    const res = await fetch(`${getApiBase()}/resolve`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify({ url }),
@@ -57,13 +67,13 @@ export const api = {
 
   // Queue Operations
   async getQueue(): Promise<{ queue: QueueItem[]; total: number }> {
-    const res = await fetch(`${API_BASE}/queue`, { headers: getHeaders() });
+    const res = await fetch(`${getApiBase()}/queue`, { headers: getHeaders() });
     if (!res.ok) throw new Error('Failed to get queue');
     return res.json();
   },
 
   async addToQueue(tracks: Partial<TrackItem>[], playlistName?: string, requestId?: string): Promise<{ status: string; added_count: number; queue_ids: string[] }> {
-    const res = await fetch(`${API_BASE}/queue/add`, {
+    const res = await fetch(`${getApiBase()}/queue/add`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify({ tracks, playlist_name: playlistName, request_id: requestId }),
@@ -73,7 +83,7 @@ export const api = {
   },
 
   async reorderQueue(itemId: string, direction: 'up' | 'down'): Promise<{ status: string }> {
-    const res = await fetch(`${API_BASE}/queue/reorder`, {
+    const res = await fetch(`${getApiBase()}/queue/reorder`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify({ item_id: itemId, direction }),
@@ -83,7 +93,7 @@ export const api = {
   },
 
   async cancelQueueItem(itemId: string): Promise<{ status: string }> {
-    const res = await fetch(`${API_BASE}/queue/${itemId}`, {
+    const res = await fetch(`${getApiBase()}/queue/${itemId}`, {
       method: 'DELETE',
       headers: getHeaders(),
     });
@@ -92,7 +102,7 @@ export const api = {
   },
 
   async retryQueueItem(itemId: string, platform?: string, quality?: string): Promise<{ status: string }> {
-    const res = await fetch(`${API_BASE}/queue/${itemId}/retry`, {
+    const res = await fetch(`${getApiBase()}/queue/${itemId}/retry`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify({ platform, quality }),
@@ -103,7 +113,7 @@ export const api = {
 
   // Requests (Ombi-style)
   async getRequests(): Promise<RequestItem[]> {
-    const res = await fetch(`${API_BASE}/requests`, { headers: getHeaders() });
+    const res = await fetch(`${getApiBase()}/requests`, { headers: getHeaders() });
     if (!res.ok) throw new Error('Failed to fetch requests');
     return res.json();
   },
@@ -118,7 +128,7 @@ export const api = {
     quality: string;
     tracks?: Partial<TrackItem>[];
   }): Promise<{ status: string; request_id: string }> {
-    const res = await fetch(`${API_BASE}/requests`, {
+    const res = await fetch(`${getApiBase()}/requests`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify(payload),
@@ -129,13 +139,13 @@ export const api = {
 
   // Library & Deletion
   async getLibraryItems(limit: number = 100): Promise<LibraryItem[]> {
-    const res = await fetch(`${API_BASE}/library/items?limit=${limit}`, { headers: getHeaders() });
+    const res = await fetch(`${getApiBase()}/library/items?limit=${limit}`, { headers: getHeaders() });
     if (!res.ok) throw new Error('Failed to fetch library');
     return res.json();
   },
 
   async deleteFromLibrary(filePath: string): Promise<{ status: string }> {
-    const res = await fetch(`${API_BASE}/library/delete`, {
+    const res = await fetch(`${getApiBase()}/library/delete`, {
       method: 'DELETE',
       headers: getHeaders(),
       body: JSON.stringify({ file_path: filePath }),
@@ -148,6 +158,7 @@ export const api = {
   getWebSocketUrl(): string {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
-    return `${protocol}//${host}/api/v1/queue/ws`;
+    const prefix = getBasePrefix();
+    return `${protocol}//${host}${prefix}/api/v1/queue/ws`;
   },
 };

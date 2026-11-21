@@ -36,8 +36,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ systemStatus }) => {
             </div>
             <div className="flex justify-between p-2 rounded-lg bg-obsidian-950 border border-white/5">
               <span className="text-slate-500">Node Status:</span>
-              <span className={systemStatus?.navidrome?.online ? 'text-emerald-400 font-semibold' : 'text-rose-400'}>
-                {systemStatus?.navidrome?.online ? 'CONNECTED / SCAN READY' : 'OFFLINE'}
+              <span className={systemStatus?.navidrome?.online ? 'text-emerald-400 font-semibold' : systemStatus === null ? 'text-amber-400' : 'text-rose-400'}>
+                {systemStatus === null ? 'CONNECTING...' : systemStatus?.navidrome?.online ? 'CONNECTED / SCAN READY' : 'OFFLINE'}
               </span>
             </div>
           </div>
